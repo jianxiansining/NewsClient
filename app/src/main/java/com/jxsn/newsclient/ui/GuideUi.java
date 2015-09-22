@@ -2,6 +2,7 @@ package com.jxsn.newsclient.ui;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Intent;
 import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
@@ -9,11 +10,14 @@ import android.support.v4.view.ViewPager;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.jxsn.newsclient.R;
+import com.jxsn.newsclient.utils.PreferenceUtil;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
 
 import java.util.ArrayList;
@@ -47,6 +51,9 @@ public class GuideUi extends Activity
     private LinearLayout mPoints;
 
     private View mScrollPoint;
+
+    private TextView mStart;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -70,6 +77,8 @@ public class GuideUi extends Activity
         mPoints = (LinearLayout) findViewById(R.id.ui_guide_point);
         //移动的点
         mScrollPoint = findViewById(R.id.ui_guide_scrollpoint);
+        //开始进入阅读界面的按钮
+        mStart = (TextView) findViewById(R.id.ui_guide_start);
     }
 
     private void initData()
@@ -123,7 +132,9 @@ public class GuideUi extends Activity
             @Override
             public void onPageSelected(int position)
             {
-
+                if(position==mListDatas.size()-1){
+                    mStart.setVisibility(View.VISIBLE);
+                }
             }
 
             @Override
@@ -136,7 +147,20 @@ public class GuideUi extends Activity
 
     private void initEvent()
     {
-
+        //开始阅读按钮的监听事件
+        mStart.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                PreferenceUtil.setBoolean(GuideUi.this, WelcomeUi.FIRST_LOADING, false);
+                //跳转到Home页面
+                Intent intent=new Intent(GuideUi.this,HomeUi.class);
+                startActivity(intent);
+                //销毁当前界面
+                finish();
+            }
+        });
     }
 
     //定义一个适配器关联数据

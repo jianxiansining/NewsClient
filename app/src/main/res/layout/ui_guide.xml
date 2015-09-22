@@ -35,4 +35,18 @@
             android:background="@drawable/viewpager_point_select_shape"
             ></View>
     </RelativeLayout>
+    <!--  开始阅读-->
+    <TextView
+        android:id="@+id/ui_guide_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="140dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:clickable="true"
+        android:visibility="gone"
+        android:textSize="30dp"
+        android:textColor="@color/ui_guide_startbutton_nomaltext"
+        android:text="开始阅读"
+        />
 </RelativeLayout>

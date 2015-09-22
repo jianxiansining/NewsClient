@@ -32,7 +32,7 @@ import com.jxsn.newsclient.utils.PreferenceUtil;
 public class WelcomeUi extends AppCompatActivity
 {
 
-    private static final String FIRST_LOADING="first_loading";
+    public static final String FIRST_LOADING="first_loading";
     private static final long DELAYANI=3000;
 
     private ImageView mIvWel;
@@ -120,13 +120,12 @@ public class WelcomeUi extends AppCompatActivity
                             e.printStackTrace();
                         }
                         //获得本地记录数据，判断是否是第一次进入
-                        boolean first_flag =true;// PreferenceUtil.getBoolean(WelcomeUi.this, FIRST_LOADING, true);
+                        boolean first_flag =PreferenceUtil.getBoolean(WelcomeUi.this, FIRST_LOADING, true);
                         if (first_flag)
                         {
                             //向导界面
                             Intent intent = new Intent(WelcomeUi.this, GuideUi.class);
                             startActivity(intent);
-                            PreferenceUtil.setBoolean(WelcomeUi.this, FIRST_LOADING, false);
                         } else
                         {
                             //主界面
