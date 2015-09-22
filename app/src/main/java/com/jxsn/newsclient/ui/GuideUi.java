@@ -51,6 +51,7 @@ public class GuideUi extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_guide);
 
+        int i=0;
         //初始化VIew
         initView();
         //初始化数据
