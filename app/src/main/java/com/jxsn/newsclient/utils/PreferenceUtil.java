@@ -48,6 +48,8 @@ public class PreferenceUtil
 
         return getBoolean(context, name, false);
     }
+
+
     //获得字符串数据方式一
     public String getString(Context context,String name,String defValue){
 
@@ -59,5 +61,11 @@ public class PreferenceUtil
 
         SharedPreferences sp = getPreferences(context);
         return sp.getString(name,null);
+    }
+    //设置字符串数据的键值存储
+    public void setString(Context context,String name,String values){
+
+        SharedPreferences sp = getPreferences(context);
+        sp.edit().putString(name,values).commit();
     }
 }

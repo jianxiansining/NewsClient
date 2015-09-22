@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
@@ -89,7 +90,7 @@ public class GuideUi extends Activity
             point.setBackgroundResource(R.drawable.viewpager_point_normal_shape);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(this,15),ScreenCodeUtil.dpToPx(this,15));
             if(i!=0){
-                params.leftMargin=10;
+                params.leftMargin=ScreenCodeUtil.dpToPx(this,10);
             }
             mPoints.addView(point, params);
         }
@@ -99,6 +100,8 @@ public class GuideUi extends Activity
         //ViewPager关联适配器
         mViewPager.setAdapter(mAdapter);
 
+        //获得点与点之间的间距
+        final int pointDistance = ScreenCodeUtil.dpToPx(this, 25);
         //设置监听ViewPager的事件
         mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener()
         {
@@ -106,7 +109,15 @@ public class GuideUi extends Activity
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
             {
+                //1,获得Viewpage当前图移动的比例  :positionOffset
+                //2,实时获得点到另外一个点过程中移动的距离
+                int  pointMove = (int) (pointDistance * positionOffset+position*pointDistance+0.5f);
 
+                //获得父容器的layout给予的参数
+                RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) mScrollPoint.getLayoutParams();
+                params.leftMargin=pointMove;
+                //实时更新移动的点
+                mScrollPoint.setLayoutParams(params);
             }
 
             @Override
