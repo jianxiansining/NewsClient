@@ -3,6 +3,7 @@ package com.jxsn.newsclient.ui;
 import android.app.Activity;
 import android.os.Bundle;
 
+import com.jeremyfeinstein.slidingmenu.lib.app.SlidingActivity;
 import com.jxsn.newsclient.R;
 
 
@@ -18,14 +19,18 @@ import com.jxsn.newsclient.R;
  * @修改时间:$$Date$$
  * @修改时间:TODO
  */
-public class HomeUi extends Activity
+public class HomeUi extends SlidingActivity
 {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    public  void onCreate(Bundle savedInstanceState)
     {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_home);
+
+        setBehindContentView(R.layout.ui_home);
+
+
     }
 }
