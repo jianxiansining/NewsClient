@@ -44,6 +44,7 @@ public class GuideUi extends Activity
 
     private LinearLayout mPoints;
 
+    private View mScrollPoint;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -51,7 +52,6 @@ public class GuideUi extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_guide);
 
-        String xxxx;
         //初始化VIew
         initView();
         //初始化数据
@@ -66,6 +66,8 @@ public class GuideUi extends Activity
         mViewPager = (ViewPager) findViewById(R.id.ui_guide_viewpager);
         //获得排列点的父容器
         mPoints = (LinearLayout) findViewById(R.id.ui_guide_point);
+        //移动的点
+        mScrollPoint = findViewById(R.id.ui_guide_scrollpoint);
     }
 
     private void initData()
@@ -83,7 +85,7 @@ public class GuideUi extends Activity
             mListDatas.add(iv);
             //添加点
             View point = new View(this);
-            point.setBackgroundResource(R.drawable.viewpager_point_select_shape);
+            point.setBackgroundResource(R.drawable.viewpager_point_normal_shape);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     30, 30);
             if(i!=0){
@@ -96,6 +98,29 @@ public class GuideUi extends Activity
         mAdapter = new GuideAdapter();
         //ViewPager关联适配器
         mViewPager.setAdapter(mAdapter);
+
+        //设置监听ViewPager的事件
+        mViewPager.setOnPageChangeListener(new ViewPager.OnPageChangeListener()
+        {
+
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
+            {
+
+            }
+
+            @Override
+            public void onPageSelected(int position)
+            {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state)
+            {
+
+            }
+        });
     }
 
     private void initEvent()

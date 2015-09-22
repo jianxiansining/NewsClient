@@ -26,7 +26,13 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             >
-
         </LinearLayout>
+       <!-- 滑动的点-->
+        <View
+            android:id="@+id/ui_guide_scrollpoint"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:background="@drawable/viewpager_point_select_shape"
+            ></View>
     </RelativeLayout>
 </RelativeLayout>
