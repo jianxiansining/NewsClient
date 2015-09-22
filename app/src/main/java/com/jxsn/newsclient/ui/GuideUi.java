@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.jxsn.newsclient.R;
+import com.jxsn.newsclient.utils.ScreenCodeUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,8 +87,7 @@ public class GuideUi extends Activity
             //添加点
             View point = new View(this);
             point.setBackgroundResource(R.drawable.viewpager_point_normal_shape);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    30, 30);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(this,15),ScreenCodeUtil.dpToPx(this,15));
             if(i!=0){
                 params.leftMargin=10;
             }
