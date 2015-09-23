@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--上面部分-->
+    <com.jxsn.newsclient.view.NoScrollViewPager
+        android:id="@+id/ui_home_content_pager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        />
+    <!--底端部分-->
+    <RadioGroup
+        android:id="@+id/ui_home_content_bottom_radio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0"
+        android:background="@drawable/bottom_tab_bg"
+        android:orientation="horizontal"
+        >
+
+        <RadioButton
+            android:id="@+id/ui_home_content_bottom_home"
+            style="@style/ContentBottomStyle"
+            android:drawableTop="@drawable/ui_content_bottomradio_home_selector"
+            android:text="主页" />
+
+        <RadioButton
+            android:id="@+id/ui_home_content_bottom_news"
+            style="@style/ContentBottomStyle"
+            android:drawableTop="@drawable/ui_content_bottomradio_newscenter_selector"
+            android:text="新闻" />
+
+        <RadioButton
+            android:id="@+id/ui_home_content_bottom_smart"
+            style="@style/ContentBottomStyle"
+            android:drawableTop="@drawable/ui_content_bottomradio_smartservice_selector"
+            android:text="智慧服务" />
+
+        <RadioButton
+            android:id="@+id/ui_home_content_bottom_gov"
+            style="@style/ContentBottomStyle"
+            android:drawableTop="@drawable/ui_content_bottomradio_gov_selector"
+            android:text="政务" />
+
+        <RadioButton
+            android:id="@+id/ui_home_content_bottom_set"
+            style="@style/ContentBottomStyle"
+            android:drawableTop="@drawable/ui_content_bottomradio_setting_selector"
+            android:text="设置" />
+
+    </RadioGroup>
+</LinearLayout>
