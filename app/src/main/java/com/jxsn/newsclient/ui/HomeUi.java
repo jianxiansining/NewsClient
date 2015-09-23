@@ -1,10 +1,15 @@
 package com.jxsn.newsclient.ui;
 
+import android.app.FragmentManager;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingActivity;
+import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 import com.jxsn.newsclient.R;
+import com.jxsn.newsclient.fragment.ContentFragment;
+import com.jxsn.newsclient.fragment.MenuFragment;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
 
 
@@ -20,7 +25,7 @@ import com.jxsn.newsclient.utils.ScreenCodeUtil;
  * @修改时间:$$Date$$
  * @修改时间:TODO
  */
-public class HomeUi extends SlidingActivity
+public class HomeUi extends SlidingFragmentActivity
 {
 
     private SlidingMenu slidingMenu;
@@ -50,5 +55,23 @@ public class HomeUi extends SlidingActivity
 
         //设置渐变精度为0.35f;
         slidingMenu.setFadeDegree(0.35f);
+
+        //使用FrageMent分流两个界面
+        initFragment();
+    }
+
+    private void initFragment()
+    {
+        //获得Fragment支持包的管理者
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+        //开始一个事务
+        FragmentTransaction trans = fm.beginTransaction();
+
+        //加载菜单Fragment
+        trans.replace(R.id.ui_home_menu_fragment,new MenuFragment());
+        //加载内容Fragment
+        trans.replace(R.id.ui_home_content_fragment,new ContentFragment());
+        //提交事务
+        trans.commit();
     }
 }
