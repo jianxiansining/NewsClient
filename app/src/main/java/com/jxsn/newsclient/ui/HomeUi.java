@@ -1,10 +1,11 @@
 package com.jxsn.newsclient.ui;
 
-import android.app.Activity;
 import android.os.Bundle;
 
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingActivity;
 import com.jxsn.newsclient.R;
+import com.jxsn.newsclient.utils.ScreenCodeUtil;
 
 
 /**
@@ -22,15 +23,32 @@ import com.jxsn.newsclient.R;
 public class HomeUi extends SlidingActivity
 {
 
+    private SlidingMenu slidingMenu;
+
     @Override
     public  void onCreate(Bundle savedInstanceState)
     {
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.ui_home);
+        //设置当前界面内容布局
+        setContentView(R.layout.ui_home_content);
 
-        setBehindContentView(R.layout.ui_home);
+        //设置当前界面的菜单布局
+        setBehindContentView(R.layout.ui_home_menu);
 
+        //获得SlidingMunu对象
+        SlidingMenu slidingMenu =getSlidingMenu();
 
+        //设置左侧可以侧滑
+        slidingMenu.setMode(SlidingMenu.LEFT);
+
+        //设置菜单显示出的宽度
+        slidingMenu.setBehindWidth(ScreenCodeUtil.dpToPx(this, 140));
+
+        //设置可以全局触摸滑动
+        slidingMenu.setTouchModeAbove(SlidingMenu.TOUCHMODE_FULLSCREEN);
+
+        //设置渐变精度为0.35f;
+        slidingMenu.setFadeDegree(0.35f);
     }
 }
