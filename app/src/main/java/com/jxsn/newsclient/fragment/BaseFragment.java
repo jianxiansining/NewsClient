@@ -23,7 +23,7 @@ import android.view.ViewGroup;
 public abstract class BaseFragment extends Fragment
 {
 
-    private Context mContext;
+    public Context mContext;
     /**
      * 相同点由福利
      * @param inflater

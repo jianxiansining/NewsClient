@@ -28,6 +28,10 @@ import com.squareup.okhttp.Request;
 public class HomeUi extends SlidingFragmentActivity
 {
 
+    private static final String FLAG_MENU ="menu";
+
+    private static final String FLAG_CONTENT ="content";
+
     private SlidingMenu slidingMenu;
 
 
@@ -69,10 +73,25 @@ public class HomeUi extends SlidingFragmentActivity
         FragmentTransaction trans = fm.beginTransaction();
 
         //加载菜单Fragment
-        trans.replace(R.id.ui_home_menu_fragment, new MenuFragment());
+        trans.replace(R.id.ui_home_menu_fragment, new MenuFragment(), FLAG_MENU);
         //加载内容Fragment
-        trans.replace(R.id.ui_home_content_fragment, new ContentFragment());
+        trans.replace(R.id.ui_home_content_fragment, new ContentFragment(), FLAG_CONTENT);
         //提交事务
         trans.commit();
+    }
+    //设置方法返回一个MenuFragment对象
+    public MenuFragment getMenuFragment(){
+        //获得Fragment支持包的管理者
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+
+        return (MenuFragment) fm.findFragmentByTag(FLAG_MENU);
+    }
+
+    //设置方法返回一个ContentFragment对象
+    public ContentFragment getContentFragment(){
+        //获得Fragment支持包的管理者
+        android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+
+        return (ContentFragment) fm.findFragmentByTag(FLAG_CONTENT);
     }
 }

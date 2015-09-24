@@ -37,4 +37,11 @@ public abstract class BaseController
 
     //提供一个空方法，如果子类要去初始化数据，就可以复写该方法
     public void initData(){}
+
+    /**
+     * 需要改变才去调用该方法
+     */
+    public void switchMenu(int postion){
+
+    }
 }

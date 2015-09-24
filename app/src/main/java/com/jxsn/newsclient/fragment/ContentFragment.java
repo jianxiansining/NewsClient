@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.controller.BaseController;
 import com.jxsn.newsclient.controller.tab.GovController;
@@ -14,6 +15,7 @@ import com.jxsn.newsclient.controller.tab.HomeController;
 import com.jxsn.newsclient.controller.tab.NewsCenterController;
 import com.jxsn.newsclient.controller.tab.SettingController;
 import com.jxsn.newsclient.controller.tab.SmartServiceController;
+import com.jxsn.newsclient.ui.HomeUi;
 import com.jxsn.newsclient.view.NoScrollViewPager;
 
 import java.util.ArrayList;
@@ -83,18 +85,23 @@ public class ContentFragment extends BaseFragment
                 {
                     case R.id.ui_home_content_bottom_home:
                         mCurrentPosition=0;
+                        isSlidingMenu(false);
                         break;
                     case R.id.ui_home_content_bottom_news:
                         mCurrentPosition=1;
+                        isSlidingMenu(true);
                         break;
                     case R.id.ui_home_content_bottom_smart:
                         mCurrentPosition=2;
+                        isSlidingMenu(true);
                         break;
                     case R.id.ui_home_content_bottom_gov:
                         mCurrentPosition=3;
+                        isSlidingMenu(true);
                         break;
                     case R.id.ui_home_content_bottom_set:
                         mCurrentPosition=4;
+                        isSlidingMenu(false);
                         break;
                     default:
                         break;
@@ -103,7 +110,12 @@ public class ContentFragment extends BaseFragment
             }
         });
     }
-
+    //设置主页和设置界面能不能滑动出菜单
+    public void isSlidingMenu(boolean isScroll){
+        HomeUi ui= (HomeUi) mContext;
+        SlidingMenu slidingMenu = ui.getSlidingMenu();
+        slidingMenu.setTouchModeAbove(isScroll ? SlidingMenu.TOUCHMODE_FULLSCREEN : SlidingMenu.TOUCHMODE_NONE);
+    }
 
     //自定义一个类继承PagerAdapter
     private class ContentAdapter extends PagerAdapter
@@ -155,5 +167,12 @@ public class ContentFragment extends BaseFragment
 
             container.removeView((View) object);
         }
+    }
+    public void switchMenu(int postion){
+
+        //获得当前内容界面选中的底端的一个按钮，对应的显示
+        BaseController controller = mListController.get(mCurrentPosition);
+        //通知对应的view去更改显示
+        controller.switchMenu(postion);
     }
 }
