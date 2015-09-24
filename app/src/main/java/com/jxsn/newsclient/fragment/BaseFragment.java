@@ -44,10 +44,10 @@ public abstract class BaseFragment extends Fragment
 
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState)
+    public void onActivityCreated(@Nullable Bundle savedInstanceState)
     {
-        super.onViewCreated(view, savedInstanceState);
 
+        super.onActivityCreated(savedInstanceState);
         initData();
     }
 

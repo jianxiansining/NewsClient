@@ -1,16 +1,17 @@
 package com.jxsn.newsclient.ui;
 
-import android.app.FragmentManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
-import com.jeremyfeinstein.slidingmenu.lib.app.SlidingActivity;
 import com.jeremyfeinstein.slidingmenu.lib.app.SlidingFragmentActivity;
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.fragment.ContentFragment;
 import com.jxsn.newsclient.fragment.MenuFragment;
+import com.jxsn.newsclient.utils.OkHttpClientManager;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
+import com.squareup.okhttp.Request;
 
 
 /**
@@ -19,7 +20,6 @@ import com.jxsn.newsclient.utils.ScreenCodeUtil;
  * @作者:djn
  * @创建日期:2015/9/21 20:43
  * @描述:设置向导界面
- *
  * @SVN版本号:$$Rev$$
  * @修改人:$$Author$$
  * @修改时间:$$Date$$
@@ -30,8 +30,9 @@ public class HomeUi extends SlidingFragmentActivity
 
     private SlidingMenu slidingMenu;
 
+
     @Override
-    public  void onCreate(Bundle savedInstanceState)
+    public void onCreate(Bundle savedInstanceState)
     {
 
         super.onCreate(savedInstanceState);
@@ -42,7 +43,7 @@ public class HomeUi extends SlidingFragmentActivity
         setBehindContentView(R.layout.ui_home_menu);
 
         //获得SlidingMunu对象
-        SlidingMenu slidingMenu =getSlidingMenu();
+        SlidingMenu slidingMenu = getSlidingMenu();
 
         //设置左侧可以侧滑
         slidingMenu.setMode(SlidingMenu.LEFT);
@@ -68,9 +69,9 @@ public class HomeUi extends SlidingFragmentActivity
         FragmentTransaction trans = fm.beginTransaction();
 
         //加载菜单Fragment
-        trans.replace(R.id.ui_home_menu_fragment,new MenuFragment());
+        trans.replace(R.id.ui_home_menu_fragment, new MenuFragment());
         //加载内容Fragment
-        trans.replace(R.id.ui_home_content_fragment,new ContentFragment());
+        trans.replace(R.id.ui_home_content_fragment, new ContentFragment());
         //提交事务
         trans.commit();
     }
