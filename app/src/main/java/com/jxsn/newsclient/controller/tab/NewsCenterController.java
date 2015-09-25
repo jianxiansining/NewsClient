@@ -192,7 +192,7 @@ public class NewsCenterController extends TabController
             switch (mListMenuBean.get(i).type)
             {
                 case 1:
-                    mListMenuController.add(new NewsMenuController(mContext));
+                    mListMenuController.add(new NewsMenuController(mContext,mListMenuBean.get(i).children));
                     break;
                 case 2:
                     mListMenuController.add(new PicMenuController(mContext));
