@@ -1,17 +1,12 @@
 package com.jxsn.newsclient.fragment;
 
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.bean.NewsCenterBean;
@@ -74,7 +69,10 @@ public class MenuFragment extends BaseFragment implements AdapterView.OnItemClic
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
-
+        //如果选中的是当前条目，则不做任何事
+        if(mCurrentPosition==position){
+            return;
+        }
         Log.d(TAG,"点击了"+position);
         //需要通知新闻中心界面去改变对应的显示
         HomeUi ui= (HomeUi) mContext;
@@ -83,11 +81,15 @@ public class MenuFragment extends BaseFragment implements AdapterView.OnItemClic
         //切换相应显示界面
         contentFragment.switchMenu(position);
 
+
         //获得当前点击的条目位置
         mCurrentPosition=position;
 
         //更新UI
         mMenuAdapter.notifyDataSetChanged();
+
+        //关闭菜单
+        ui.getSlidingMenu().toggle();
     }
 
     //自定义继承baseAdapter
