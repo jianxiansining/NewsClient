@@ -2,7 +2,6 @@ package com.jxsn.newsclient.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.Preference;
 
 
 /**
@@ -25,7 +24,7 @@ public class PreferenceUtil
     //获得存储数据工具的对象
     public static SharedPreferences getPreferences(Context context){
         if(sp==null){
-            sp=context.getSharedPreferences(LOCAL_DATA,context.MODE_PRIVATE);
+            sp=context.getSharedPreferences(LOCAL_DATA, Context.MODE_PRIVATE);
         }
         return sp;
     }
@@ -50,22 +49,56 @@ public class PreferenceUtil
     }
 
 
+    /**
+     * String
+     * @param context
+     * @param name
+     * @param defValue
+     * @return
+     */
     //获得字符串数据方式一
-    public String getString(Context context,String name,String defValue){
+    public static String getString(Context context,String name,String defValue){
 
         SharedPreferences sp = getPreferences(context);
         return sp.getString(name, defValue);
     }
     //获得字符串数据方式二
-    public String getString(Context context,String name){
+    public static String getString(Context context,String name){
 
         SharedPreferences sp = getPreferences(context);
-        return sp.getString(name,null);
+        return sp.getString(name, null);
     }
     //设置字符串数据的键值存储
-    public void setString(Context context,String name,String values){
+    public static void setString(Context context,String name,String values){
 
         SharedPreferences sp = getPreferences(context);
         sp.edit().putString(name,values).commit();
+    }
+
+
+    /**
+     * long类型的操作
+     * @param context
+     * @param name
+     * @param defValue
+     * @return
+     */
+    //获得字符串数据方式一
+    public static long getLong(Context context,String name,long defValue){
+
+        SharedPreferences sp = getPreferences(context);
+        return sp.getLong(name, defValue);
+    }
+    //获得字符串数据方式二
+    public static long getLong(Context context,String name){
+
+        SharedPreferences sp = getPreferences(context);
+        return sp.getLong(name,0);
+    }
+    //设置字符串数据的键值存储
+    public static void setLong(Context context,String name,long values){
+
+        SharedPreferences sp = getPreferences(context);
+        sp.edit().putLong(name, values).commit();
     }
 }

@@ -2,10 +2,9 @@ package com.jxsn.newsclient.controller.menu;
 
 import android.content.Context;
 import android.view.View;
-import android.widget.TextView;
 
+import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.controller.BaseController;
-import com.jxsn.newsclient.controller.TabController;
 
 
 /**
@@ -28,14 +27,21 @@ public class NewsMenuController extends BaseController
         super(context);
     }
 
-
-
+    //初始化View
     @Override
     protected View initView(Context context)
     {
+        //加载view
+        View view= View.inflate(context, R.layout.ui_menu_news,null);
 
-        TextView tv=new TextView(context);
-        tv.setText("新闻界面");
-        return tv;
+        //TODO viewPager控件的注入
+        return view;
+    }
+
+    //加载数据
+    @Override
+    public void initData()
+    {
+
     }
 }
