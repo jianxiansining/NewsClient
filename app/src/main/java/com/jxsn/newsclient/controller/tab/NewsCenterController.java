@@ -50,7 +50,7 @@ import java.util.List;
 public class NewsCenterController extends TabController
 {
 
-    private static final String LOG = "NewsCenterController";
+    private static final String TAG = "NewsCenterController";
 
     private FrameLayout mContainer;
     private List<BaseController> mListMenuController;
@@ -82,7 +82,7 @@ public class NewsCenterController extends TabController
         mIvMenu.setVisibility(View.VISIBLE);
         mTvTitle.setText("新闻中心");
 
-
+        Log.d(TAG,"加载新闻");
         /**
          * 加载数据
          * 1，url
@@ -124,7 +124,7 @@ public class NewsCenterController extends TabController
                     public void onFailure(HttpException e, String s)
                     {
 
-                        Log.d(LOG, "" + e + s);
+                        Log.d(TAG, "" + e + s);
                     }
                 }
         );

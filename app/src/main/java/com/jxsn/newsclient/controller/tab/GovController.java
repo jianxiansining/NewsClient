@@ -2,6 +2,7 @@ package com.jxsn.newsclient.controller.tab;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -23,6 +24,9 @@ import com.jxsn.newsclient.controller.TabController;
  */
 public class GovController extends TabController
 {
+
+    private static final String LOG ="GovController";
+
 
     public GovController(Context context)
     {
@@ -46,5 +50,7 @@ public class GovController extends TabController
     {
         mIvMenu.setVisibility(View.VISIBLE);
         mTvTitle.setText("政务");
+
+        Log.d(LOG,"加载政务");
     }
 }

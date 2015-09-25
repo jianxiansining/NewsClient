@@ -1,7 +1,6 @@
 package com.jxsn.newsclient.view;
 
 import android.content.Context;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
@@ -17,12 +16,11 @@ import android.view.MotionEvent;
  * @修改时间:$$Data$$
  * @修改内容:TODO
  */
-public class NoScrollViewPager extends ViewPager
+public class NoScrollViewPager extends NoLoadingViewPager
 {
 
     public NoScrollViewPager(Context context)
     {
-
         this(context, null);
     }
 

@@ -2,6 +2,7 @@ package com.jxsn.newsclient.controller.tab;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -23,6 +24,9 @@ import com.jxsn.newsclient.controller.TabController;
  */
 public class SmartServiceController extends TabController
 {
+
+    private static final String TAG ="SmartServiceController";
+
 
     public SmartServiceController(Context context)
     {
@@ -47,5 +51,7 @@ public class SmartServiceController extends TabController
     {
         mIvMenu.setVisibility(View.VISIBLE);
         mTvTitle.setText("智慧服务");
+
+        Log.d(TAG,"加载智慧服务");
     }
 }

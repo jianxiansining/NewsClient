@@ -2,6 +2,7 @@ package com.jxsn.newsclient.controller.tab;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.TextView;
@@ -23,6 +24,9 @@ import com.jxsn.newsclient.controller.TabController;
  */
 public class HomeController extends TabController
 {
+
+    private static final String TAG ="HomeController";
+
 
     public HomeController(Context context)
     {
@@ -48,5 +52,6 @@ public class HomeController extends TabController
     {
         mIvMenu.setVisibility(View.GONE);
         mTvTitle.setText("主页");
+        Log.d(TAG,"加载主页");
     }
 }

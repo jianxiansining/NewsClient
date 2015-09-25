@@ -1,11 +1,10 @@
 package com.jxsn.newsclient.fragment;
 
 import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jxsn.newsclient.R;
@@ -35,6 +34,8 @@ import java.util.List;
  */
 public class ContentFragment extends BaseFragment
 {
+
+    private static final String TAG ="ContentFragment";
 
     private NoScrollViewPager mViewPager;
 
@@ -147,6 +148,8 @@ public class ContentFragment extends BaseFragment
         @Override
         public Object instantiateItem(ViewGroup container, int position)
         {
+
+            Log.d(TAG,"加载了"+position);
             //获得当前位置在集合中对应的对象
             BaseController baseController = mListController.get(position);
             //加载数据
@@ -166,6 +169,7 @@ public class ContentFragment extends BaseFragment
         {
 
             container.removeView((View) object);
+            Log.d(TAG, "销毁了" + position);
         }
     }
     public void switchMenu(int postion){
