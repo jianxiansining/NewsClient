@@ -1,21 +1,19 @@
 package com.jxsn.newsclient.controller.menu;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.bean.NewsCenterBean;
 import com.jxsn.newsclient.controller.BaseController;
+import com.jxsn.newsclient.controller.news.NewsListController;
 import com.lidroid.xutils.ViewUtils;
 import com.lidroid.xutils.view.annotation.ViewInject;
+import com.viewpagerindicator.TabPageIndicator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -35,7 +33,10 @@ public class NewsMenuController extends BaseController
     @ViewInject(R.id.ui_menu_news_viewpager)
     private ViewPager mViewPager;
 
-    private List<NewsCenterBean.Category> mListChildren=new ArrayList<NewsCenterBean.Category>();
+    @ViewInject(R.id.ui_menu_news_indicator)
+    private TabPageIndicator indicator;
+
+    private List<NewsCenterBean.Category> mListChildren;
 
     private NewsMenuAdapter mPagerAdapter;
 
@@ -65,6 +66,8 @@ public class NewsMenuController extends BaseController
         mPagerAdapter=new NewsMenuAdapter();
         //关联适配器
         mViewPager.setAdapter(mPagerAdapter);
+        //设置indicator绑定ViewPager
+        indicator.setViewPager(mViewPager);
     }
 
     //创建一个类继承BaseAdapter
@@ -92,14 +95,17 @@ public class NewsMenuController extends BaseController
         @Override
         public Object instantiateItem(ViewGroup container, int position)
         {
-
-            TextView tv=new TextView(mContext);
-            tv.setText(mListChildren.get(position).title);
-            tv.setGravity(Gravity.CENTER);
-            tv.setTextSize(30);
-            tv.setTextColor(Color.RED);
-            container.addView(tv);
-            return tv;
+            //获得当前位置的bean
+            NewsCenterBean.Category bean = mListChildren.get(position);
+            //获得对应构造函数对象
+            NewsListController controller=new NewsListController(mContext,bean);
+            //获得相应的view
+            View view = controller.getView();
+            //添加view到容器中
+            container.addView(view);
+            //加载数据
+            controller.initData();
+            return view;
         }
 
         //销毁数据
@@ -107,6 +113,15 @@ public class NewsMenuController extends BaseController
         public void destroyItem(ViewGroup container, int position, Object object)
         {
             container.removeView((View) object);
+        }
+
+        //获得title的数目
+        @Override
+        public CharSequence getPageTitle(int position) {
+            if(mListChildren!=null){
+                return mListChildren.get(position).title;
+            }
+            return null;
         }
     }
 }

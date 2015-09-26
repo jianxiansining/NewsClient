@@ -27,4 +27,5 @@ dependencies {
     compile files('libs/okhttp-2.4.0.jar')
     compile files('libs/okio-1.4.0.jar')
     compile files('libs/xUtils-2.6.14.jar')
+    compile project(':ViewPagerIndicator_library')
 }
