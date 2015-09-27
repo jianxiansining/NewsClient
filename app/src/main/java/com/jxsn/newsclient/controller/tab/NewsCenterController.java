@@ -62,7 +62,6 @@ public class NewsCenterController extends TabController
     @Override
     protected View initContent(Context context)
     {
-
         mContainer = new FrameLayout(context);
         return mContainer;
     }

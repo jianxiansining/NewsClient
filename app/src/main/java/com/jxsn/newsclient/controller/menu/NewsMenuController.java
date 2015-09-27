@@ -5,14 +5,18 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
 import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.bean.NewsCenterBean;
 import com.jxsn.newsclient.controller.BaseController;
 import com.jxsn.newsclient.controller.news.NewsListController;
+import com.jxsn.newsclient.ui.HomeUi;
+import com.jxsn.newsclient.view.FocusTabPageIndicator;
 import com.lidroid.xutils.ViewUtils;
 import com.lidroid.xutils.view.annotation.ViewInject;
-import com.viewpagerindicator.TabPageIndicator;
+import com.lidroid.xutils.view.annotation.event.OnClick;
 
 import java.util.List;
 
@@ -28,13 +32,13 @@ import java.util.List;
  * @修改时间:$$Data$$
  * @修改内容:TODO
  */
-public class NewsMenuController extends BaseController
+public class NewsMenuController extends BaseController implements ViewPager.OnPageChangeListener
 {
     @ViewInject(R.id.ui_menu_news_viewpager)
     private ViewPager mViewPager;
 
     @ViewInject(R.id.ui_menu_news_indicator)
-    private TabPageIndicator indicator;
+    private FocusTabPageIndicator indicator;
 
     private List<NewsCenterBean.Category> mListChildren;
 
@@ -68,8 +72,52 @@ public class NewsMenuController extends BaseController
         mViewPager.setAdapter(mPagerAdapter);
         //设置indicator绑定ViewPager
         indicator.setViewPager(mViewPager);
+
+        //设置滑动监听,此时这里要的对indicator监听
+        indicator.setOnPageChangeListener(this);
     }
 
+
+    /**
+     * 监听的方法
+     * @param position
+     * @param positionOffset
+     * @param positionOffsetPixels
+     */
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels)
+    {
+
+    }
+
+
+    @Override
+    public void onPageSelected(int position)
+    {
+        //获得主页对象
+        HomeUi ui= (HomeUi) mContext;
+        SlidingMenu slidingMenu = ui.getSlidingMenu();
+        //设置当处于第一个条目北京时候,才能像左滑动，显示出菜单
+        slidingMenu.setTouchModeAbove(position==0?SlidingMenu.TOUCHMODE_FULLSCREEN:SlidingMenu.TOUCHMODE_NONE);
+    }
+
+
+    @Override
+    public void onPageScrollStateChanged(int state)
+    {
+
+    }
+
+
+
+    //点击箭头跳到下一个条目
+    @OnClick(R.id.ui_menu_news_category_arr)
+    public void nextArr(View v){
+
+        Toast.makeText(mContext,"你点击了下一个条目",Toast.LENGTH_SHORT).show();
+        int item = mViewPager.getCurrentItem();
+        mViewPager.setCurrentItem(++item);
+    }
     //创建一个类继承BaseAdapter
     private class NewsMenuAdapter extends PagerAdapter{
 

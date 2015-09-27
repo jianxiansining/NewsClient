@@ -14,7 +14,7 @@ package com.jxsn.newsclient.utils;
 public interface ConstantsUtil
 {
     //定义一个常量值，赋值为常用的url
-    String BASE_URL="http://188.188.7.6:8080/news";
+    String BASE_URL="http://188.188.7.6:8080/zhbj";
 
     //新闻中心的url
     String NEWSCENTER_URL=BASE_URL+"/categories.json";
