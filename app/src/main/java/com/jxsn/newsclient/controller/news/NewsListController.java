@@ -1,11 +1,15 @@
 package com.jxsn.newsclient.controller.news;
 
 import android.content.Context;
+import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -15,9 +19,12 @@ import com.jxsn.newsclient.R;
 import com.jxsn.newsclient.bean.NewsCenterBean;
 import com.jxsn.newsclient.bean.NewsDataBean;
 import com.jxsn.newsclient.controller.BaseController;
+import com.jxsn.newsclient.controller.menu.NewsMenuController;
 import com.jxsn.newsclient.utils.ConstantsUtil;
+import com.jxsn.newsclient.utils.PreferenceUtil;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
 import com.jxsn.newsclient.view.FocusViewPager;
+import com.jxsn.newsclient.view.RefreshListView;
 import com.lidroid.xutils.BitmapUtils;
 import com.lidroid.xutils.HttpUtils;
 import com.lidroid.xutils.ViewUtils;
@@ -41,7 +48,7 @@ import java.util.List;
  * @修改时间:$$Data$$
  * @修改内容:TODO
  */
-public class NewsListController extends BaseController implements ViewPager.OnPageChangeListener
+public class NewsListController extends BaseController implements ViewPager.OnPageChangeListener, NewsMenuController.OnPageIdleListener
 {
 
     private static final String TAG = "NewsListController";
@@ -55,6 +62,9 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     @ViewInject(R.id.ui_menu_news_categoriesdata_pager_points)
     private LinearLayout mPointContainer;
 
+    @ViewInject(R.id.ui_menu_news_category_listview)
+    private RefreshListView mListView;
+
     //定义集合，用于存放图片
     private List<NewsDataBean.DataEntity.TopnewsEntity> mTopnews;
 
@@ -62,6 +72,10 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     private NewsCenterBean.Category mCategoryData;
 
     private BitmapUtils mBitmapUtils;
+
+    private AutoPlayHandler mHandler;
+
+    List<NewsDataBean.DataEntity.NewsEntity> mNewsData;
 
 
     public NewsListController(Context context, NewsCenterBean.Category Data)
@@ -82,12 +96,21 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         //加载所有类的属性和方法
         ViewUtils.inject(this, view);
 
+        View headerView = View.inflate(context, R.layout.menu_news_viewpager_pic, null);
+        //注入
+        ViewUtils.inject(this,headerView);
+
+        //把V轮播图部分添加为listView的头部分
+        mListView.addHeaderView(headerView);
         //获得图片加载器
         mBitmapUtils = new BitmapUtils(context);
+
+        mHandler = new AutoPlayHandler();
         return view;
     }
 
     //初始化数据
+
 
     @Override
     public void initData()
@@ -95,6 +118,12 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         //获得相应条目数据，设置数据
         //tv.setText(mCategoryData.title);
         String url = ConstantsUtil.BASE_URL + mCategoryData.url;
+        //获得缓存数据
+        String storeData = PreferenceUtil.getString(mContext, url);
+        if (!TextUtils.isEmpty(storeData))
+        {
+            analyzeJson(storeData);
+        }
         //加载网络的方法
         loadingNet(url);
     }
@@ -102,7 +131,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
     //
     //加载网络url的方法
-    private void loadingNet(String url)
+    private void loadingNet(final String url)
     {
 
         //获得httpUtil对象
@@ -116,6 +145,9 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
             {
                 //获得返回的结果内容
                 String result = responseInfo.result;
+
+                //缓存数据
+                PreferenceUtil.setString(mContext, url, result);
                 //解析json数据
                 analyzeJson(result);
             }
@@ -144,26 +176,183 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         //获得图片源数据
         mTopnews = newsDataBean.getData().getTopnews();
 
+        //因为可能有缓存，需要清空一下
+        mPointContainer.removeAllViews();
         //设置点的个数
-        for (int i = 0; i <mTopnews.size(); i++)
+        for (int i = 0; i < mTopnews.size(); i++)
         {
-            View v=new View(mContext);
+            View v = new View(mContext);
             v.setBackgroundResource(R.drawable.dot_normal);
-            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(mContext,15),ScreenCodeUtil.dpToPx(mContext,15));
-            if(i!=0){
-                params.leftMargin=ScreenCodeUtil.dpToPx(mContext,6);
-            }else{
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(mContext, 15), ScreenCodeUtil.dpToPx(mContext, 15));
+            if (i != 0)
+            {
+                params.leftMargin = ScreenCodeUtil.dpToPx(mContext, 6);
+            } else
+            {
                 v.setBackgroundResource(R.drawable.dot_focus);
                 mPicTitle.setText(mTopnews.get(i).getTitle());
             }
-            mPointContainer.addView(v,params);
+            mPointContainer.addView(v, params);
         }
         //获得bean中的图片，并设置轮播图
         mViewPager.setAdapter(new PicViewPager());
 
+        //利用handler的原理设置轮播图
+        mHandler.start();
         //设置界面监听
         mViewPager.setOnPageChangeListener(this);
+        //设置按下和抬起的监听，用于按下时，停止轮播，抬起时候开始轮播
+        mViewPager.setOnTouchListener(new View.OnTouchListener()
+        {
+            @Override
+            public boolean onTouch(View v, MotionEvent event)
+            {
+
+                switch (event.getAction())
+                {
+                    case MotionEvent.ACTION_DOWN:
+                        mHandler.stop();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        mHandler.start();
+                        break;
+                    default:
+                        break;
+                }
+                return false;
+            }
+        });
+        //获得图文数据
+        mNewsData = newsDataBean.getData().getNews();
+        //加载图文对应数据
+        mListView.setAdapter(new newsDataAdapter());
     }
+
+
+    //自定义类继承BaseAdapter
+    public class newsDataAdapter extends BaseAdapter
+    {
+
+        @Override
+        public int getCount()
+        {
+
+            if (mNewsData != null)
+            {
+                return mNewsData.size();
+            }
+            return 0;
+        }
+
+
+        @Override
+        public Object getItem(int position)
+        {
+
+            if (mNewsData != null)
+            {
+                return mNewsData.get(position);
+            }
+            return null;
+        }
+
+
+        @Override
+        public long getItemId(int position)
+        {
+
+            return position;
+        }
+
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent)
+        {
+
+            ViewHolder holder = null;
+            if (convertView == null)
+            {
+                //加载view
+                convertView = View.inflate(mContext,R.layout.menu_news_data_show, null);
+                //初始化holder
+                holder = new ViewHolder();
+                //设置标记
+                convertView.setTag(holder);
+                //找到相应控件，并缓存起来
+                holder.ivIcon = (ImageView) convertView.findViewById(R.id.menu_news_data_show_icon);
+                holder.tvTitle = (TextView) convertView.findViewById(R.id.menu_news_data_show_title);
+                holder.tvDate = (TextView) convertView.findViewById(R.id.menu_news_data_show_date);
+            }else{
+                holder= (ViewHolder) convertView.getTag();
+            }
+            //找到相应数据对象
+            NewsDataBean.DataEntity.NewsEntity entity = mNewsData.get(position);
+
+            //设置默认的图，如果没有网络图，就也会有显示
+            holder.ivIcon.setImageResource(R.drawable.pic_item_list_default);
+            //获得网络图片，并设置
+            mBitmapUtils.display(holder.ivIcon, entity.getListimage());
+
+            //设置标题
+            holder.tvTitle.setText(entity.getTitle());
+            //设置日期
+            holder.tvDate.setText(entity.getPubdate());
+            return convertView;
+        }
+    }
+
+
+    //定义ViewHolder,用于缓存view控件
+    private class ViewHolder
+    {
+
+        ImageView ivIcon;
+
+        TextView tvTitle;
+
+        TextView tvDate;
+    }
+
+
+    //自定义类继承Handler并实现Runnable接口
+    public class AutoPlayHandler extends Handler implements Runnable
+    {
+
+        @Override
+        public void run()
+        {
+
+            int item = mViewPager.getCurrentItem();
+            if (item == mTopnews.size() - 1)
+            {
+                item = 0;
+            } else
+            {
+                item++;
+            }
+            mViewPager.setCurrentItem(item);
+            //再次调用run方法，
+            postDelayed(this, 2000);
+        }
+
+
+        public void start()
+        {
+            //因为有缓存，会调用多次，所以需要先移除之前的轮播
+            stop();
+            postDelayed(this, 2000);
+        }
+
+
+        public void stop()
+        {
+
+            removeCallbacks(this);
+        }
+    }
+    //设置当按下去当前viewpager的监听
 
 
     //界面监听的方法
@@ -172,6 +361,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     {
 
     }
+
 
     //当界面被选中时候
     @Override
@@ -183,12 +373,14 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         mPicTitle.setText(title);
 
         //设置填充点
-        for (int i = 0; i <mTopnews.size(); i++)
+        for (int i = 0; i < mTopnews.size(); i++)
         {
             View v = mPointContainer.getChildAt(i);
-            if(i==position){
+            if (i == position)
+            {
                 v.setBackgroundResource(R.drawable.dot_focus);
-            }else{
+            } else
+            {
                 v.setBackgroundResource(R.drawable.dot_normal);
             }
         }
@@ -247,7 +439,21 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         @Override
         public void destroyItem(ViewGroup container, int position, Object object)
         {
+
             container.removeView((View) object);
+        }
+    }
+
+
+    //接收到上一层viewpager的闲置
+    @Override
+    public void OnIdle()
+    {
+
+        Log.d(TAG, "接收到闲置" + mCategoryData.title);
+        if(mHandler!=null){
+            //开始轮播
+            mHandler.start();
         }
     }
 }

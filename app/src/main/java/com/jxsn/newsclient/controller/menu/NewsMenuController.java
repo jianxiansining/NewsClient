@@ -18,6 +18,8 @@ import com.lidroid.xutils.ViewUtils;
 import com.lidroid.xutils.view.annotation.ViewInject;
 import com.lidroid.xutils.view.annotation.event.OnClick;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -32,7 +34,7 @@ import java.util.List;
  * @修改时间:$$Data$$
  * @修改内容:TODO
  */
-public class NewsMenuController extends BaseController implements ViewPager.OnPageChangeListener
+public class NewsMenuController extends BaseController implements ViewPager.OnPageChangeListener, SlidingMenu.OnOpenListener, SlidingMenu.OnOpenedListener, SlidingMenu.OnCloseListener, SlidingMenu.OnClosedListener
 {
     @ViewInject(R.id.ui_menu_news_viewpager)
     private ViewPager mViewPager;
@@ -43,6 +45,9 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
     private List<NewsCenterBean.Category> mListChildren;
 
     private NewsMenuAdapter mPagerAdapter;
+
+    private List<OnPageIdleListener> mListListener=new ArrayList<OnPageIdleListener>();
+
 
     public NewsMenuController(Context context,List<NewsCenterBean.Category> listData)
     {
@@ -75,6 +80,14 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
 
         //设置滑动监听,此时这里要的对indicator监听
         indicator.setOnPageChangeListener(this);
+
+        //设置菜单栏的监听
+        HomeUi ui= (HomeUi) mContext;
+        SlidingMenu slidingMenu = ui.getSlidingMenu();
+        slidingMenu.setOnOpenListener(this);
+        slidingMenu.setOnOpenedListener(this);
+        slidingMenu.setOnCloseListener(this);
+        slidingMenu.setOnClosedListener(this);
     }
 
 
@@ -105,7 +118,8 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
     @Override
     public void onPageScrollStateChanged(int state)
     {
-
+        //当页面闲置时候，返回给轮播图消息
+        notifyListeners();
     }
 
 
@@ -118,6 +132,39 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
         int item = mViewPager.getCurrentItem();
         mViewPager.setCurrentItem(++item);
     }
+
+
+    /**
+     * 对菜单栏的舰艇1
+     */
+    @Override
+    public void onOpen()
+    {
+        notifyListeners();
+    }
+
+
+    @Override
+    public void onOpened()
+    {
+        notifyListeners();
+    }
+
+
+    @Override
+    public void onClose()
+    {
+        notifyListeners();
+    }
+
+
+    @Override
+    public void onClosed()
+    {
+        notifyListeners();
+    }
+
+
     //创建一个类继承BaseAdapter
     private class NewsMenuAdapter extends PagerAdapter{
 
@@ -151,6 +198,10 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
             View view = controller.getView();
             //添加view到容器中
             container.addView(view);
+            //设置标记方便传输到销毁时候，用于该view在销毁时候移除
+            view.setTag(controller);
+            //为当前条目的轮播图设置监听整体条目的闲置
+            addOnPageIdleListener(controller);
             //加载数据
             controller.initData();
             return view;
@@ -160,6 +211,10 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
         @Override
         public void destroyItem(ViewGroup container, int position, Object object)
         {
+            //获得当前销毁的view，并在监听中移除
+            View view= (View) object;
+            NewsListController controller = (NewsListController) view.getTag();
+            removePageIdleListener(controller);
             container.removeView((View) object);
         }
 
@@ -170,6 +225,32 @@ public class NewsMenuController extends BaseController implements ViewPager.OnPa
                 return mListChildren.get(position).title;
             }
             return null;
+        }
+    }
+
+    //提供接口
+    public interface OnPageIdleListener{
+        void OnIdle();
+    }
+
+   /* //提供方法出去
+    public void setOnPageIdleListener(OnPageIdleListener listener){
+        this.mListener=listener;
+    }*/
+    //设置多个同时监听
+    public void addOnPageIdleListener(OnPageIdleListener listener){
+        mListListener.add(listener);
+    }
+    //移除监听
+    public void removePageIdleListener(OnPageIdleListener listener){
+        mListListener.remove(listener);
+    }
+    //调用传递的方法，传递当前ViewPager加载的条目的闲置
+    public void notifyListeners(){
+        Iterator<OnPageIdleListener> it = mListListener.iterator();
+        while(it.hasNext()){
+            OnPageIdleListener next = it.next();
+            next.OnIdle();
         }
     }
 }
