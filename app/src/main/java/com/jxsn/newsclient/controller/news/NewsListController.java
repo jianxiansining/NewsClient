@@ -13,6 +13,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.jxsn.newsclient.R;
@@ -77,6 +78,10 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
     List<NewsDataBean.DataEntity.NewsEntity> mNewsData;
 
+    private String mMoreUrl;
+
+    private newsDataAdapter dataAdapter;
+
 
     public NewsListController(Context context, NewsCenterBean.Category Data)
     {
@@ -98,7 +103,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
         View headerView = View.inflate(context, R.layout.menu_news_viewpager_pic, null);
         //注入
-        ViewUtils.inject(this,headerView);
+        ViewUtils.inject(this, headerView);
 
         //把V轮播图部分添加为listView的头部分
         mListView.addHeaderView(headerView);
@@ -170,11 +175,14 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     {
 
         //获得Gson对象
-        Gson gson = new Gson();
+        final Gson gson = new Gson();
         //转换gson为数据，并封装在bean中
         NewsDataBean newsDataBean = gson.fromJson(json, NewsDataBean.class);
         //获得图片源数据
         mTopnews = newsDataBean.getData().getTopnews();
+
+        //获得更多数据项
+        mMoreUrl = newsDataBean.getData().more;
 
         //因为可能有缓存，需要清空一下
         mPointContainer.removeAllViews();
@@ -226,8 +234,135 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         });
         //获得图文数据
         mNewsData = newsDataBean.getData().getNews();
+
+        //获得数据Adapter对象
+        dataAdapter = new newsDataAdapter();
         //加载图文对应数据
-        mListView.setAdapter(new newsDataAdapter());
+        mListView.setAdapter(dataAdapter);
+
+        //设置刷新动画完成的监听,并设置数据的刷新
+        mListView.setOnRefreshFinishListener(new RefreshListView.OnRefreshFinishListener()
+        {
+            @Override
+            public void OnRefreshFinish()
+            {
+
+                Log.d(TAG, "完成更新");
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+
+                        final String url = ConstantsUtil.BASE_URL + mCategoryData.url;
+                        //获得httpUtil对象
+                        HttpUtils utils = new HttpUtils();
+                        //发送数据
+                        utils.send(HttpRequest.HttpMethod.GET, url, null, new RequestCallBack<String>()
+                        {
+                            //访问成功
+                            @Override
+                            public void onSuccess(ResponseInfo<String> responseInfo)
+                            {
+                                //获得返回的结果内容
+                                String result = responseInfo.result;
+
+                                //缓存数据
+                                PreferenceUtil.setString(mContext, url, result);
+                                //解析json数据
+                                analyzeJson(result);
+                                Log.d(TAG, "刷新成功");
+                                mListView.setActionFinish(true);
+                            }
+
+
+                            //访问失败
+                            @Override
+                            public void onFailure(HttpException e, String s)
+                            {
+
+                                Log.d(TAG, "刷新失败");
+                                e.printStackTrace();
+                                //执行下拉更新的隐藏
+                                mListView.setActionFinish(true);
+                            }
+                        });
+                    }
+                }, 3000);
+            }
+
+
+            //加载更多的数据
+            @Override
+            public void OnLoadingFinish()
+            {
+                //判断是否更多数据的url是否为空，如果为空提示
+                if(TextUtils.isEmpty(mMoreUrl)){
+                    Toast.makeText(mContext,"没有更多数据了",Toast.LENGTH_SHORT).show();
+                    //执行上拉加载的隐藏
+                    mListView.setActionFinish(false);
+                    return;
+                }
+
+                //利用handler执行延迟操作
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        //加载更多的url
+                        String url = ConstantsUtil.BASE_URL + mMoreUrl;
+                        Log.d(TAG,url);
+                        //获得HttpUtils对象
+                        HttpUtils utils = new HttpUtils();
+
+                        //发送请求
+                        utils.send(HttpRequest.HttpMethod.GET, url, null, new RequestCallBack<String>()
+                        {
+                            @Override
+                            public void onSuccess(ResponseInfo<String> responseInfo)
+                            {
+                                //获得响应的字符串
+                                String json = responseInfo.result;
+
+                                Gson gson=new Gson();
+                                //解析json数据
+                                NewsDataBean moreBean = gson.fromJson(json, NewsDataBean.class);
+
+                                Log.d(TAG,moreBean.toString());
+                                //获得加载更多的项
+                                //TODO  问题：不能将对象转换成字符串
+                                //mMoreUrl = moreBean.getData().more;
+                                //获得更多的数据集合
+                                List<NewsDataBean.DataEntity.NewsEntity> moreDates = moreBean.getData().getNews();
+                                //将更多的数据集合添加到当前集合中，并更新adapter
+                                mNewsData.addAll(moreDates);
+                                //更新数据
+                                dataAdapter.notifyDataSetChanged();
+
+                                //加载完成,执行上拉加载的隐藏
+                                mListView.setActionFinish(false);
+                                Toast.makeText(mContext,"加载完成",Toast.LENGTH_SHORT).show();
+                            }
+                            //访问失败时候
+                            @Override
+                            public void onFailure(HttpException e, String s)
+                            {
+
+                                Log.d(TAG, "加载失败");
+
+                                Toast.makeText(mContext,"加载失败",Toast.LENGTH_SHORT).show();
+                                //执行上拉加载的隐藏
+                                mListView.setActionFinish(false);
+                            }
+                        });
+                    }
+                }, 3000);
+            }
+        });
     }
 
 
@@ -275,7 +410,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
             if (convertView == null)
             {
                 //加载view
-                convertView = View.inflate(mContext,R.layout.menu_news_data_show, null);
+                convertView = View.inflate(mContext, R.layout.menu_news_data_show, null);
                 //初始化holder
                 holder = new ViewHolder();
                 //设置标记
@@ -284,8 +419,9 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
                 holder.ivIcon = (ImageView) convertView.findViewById(R.id.menu_news_data_show_icon);
                 holder.tvTitle = (TextView) convertView.findViewById(R.id.menu_news_data_show_title);
                 holder.tvDate = (TextView) convertView.findViewById(R.id.menu_news_data_show_date);
-            }else{
-                holder= (ViewHolder) convertView.getTag();
+            } else
+            {
+                holder = (ViewHolder) convertView.getTag();
             }
             //找到相应数据对象
             NewsDataBean.DataEntity.NewsEntity entity = mNewsData.get(position);
@@ -325,14 +461,17 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         {
 
             int item = mViewPager.getCurrentItem();
-            if (item == mTopnews.size() - 1)
-            {
-                item = 0;
-            } else
-            {
-                item++;
+            if(mTopnews!=null){
+                if (item == mTopnews.size() - 1)
+                {
+                    item = 0;
+                } else
+                {
+                    item++;
+                }
+                mViewPager.setCurrentItem(item);
             }
-            mViewPager.setCurrentItem(item);
+
             //再次调用run方法，
             postDelayed(this, 2000);
         }
@@ -451,7 +590,8 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     {
 
         Log.d(TAG, "接收到闲置" + mCategoryData.title);
-        if(mHandler!=null){
+        if (mHandler != null)
+        {
             //开始轮播
             mHandler.start();
         }
