@@ -78,7 +78,14 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
 
     private TextView mFootLoad;
 
+    private View mFirstView;
+
+    private boolean isInterrupt=true;
+
     private OnRefreshFinishListener mRefreshListener;
+
+    private int space=-1;
+
 
     public RefreshListView(Context context)
     {
@@ -103,18 +110,22 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
         initHeader();
         //初始化listView的尾信息
         initFooter();
+
+        //TODO 获得轮播图的左上角坐标
     }
 
-    private void initFooter(){
+
+    private void initFooter()
+    {
 
         mViewFoot = (LinearLayout) View.inflate(getContext(), R.layout.load_foot, null);
         mFootProgress = (ProgressBar) mViewFoot.findViewById(R.id.load_foot_pb);
-        mFootLoad= (TextView) mViewFoot.findViewById(R.id.load_foot_load);
+        mFootLoad = (TextView) mViewFoot.findViewById(R.id.load_foot_load);
 
         //添加尾信息
         addFooterView(mViewFoot);
         //设置按照自己本身来设置大小
-        mViewFoot.measure(0,0);
+        mViewFoot.measure(0, 0);
         //获得测量后的高度
         mLoadMeasuredHeight = mViewFoot.getMeasuredHeight();
         //隐藏尾信息
@@ -123,6 +134,7 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
         //设置listView监听
         setOnScrollListener(this);
     }
+
 
     private void initHeader()
     {
@@ -152,6 +164,17 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
         mViewHeader.setPadding(0, -mRefreshHeadHeight, 0, 0);
     }
 
+    //重写addHeaderView，用于判断在添加头轮播图时候
+    @Override
+    public void addHeaderView(View v)
+    {
+        //如果当前的请求头为空，并且不为刷新view
+        if (mFirstView == null && mFirstView != mViewHeader)
+        {
+            mFirstView = v;
+        }
+        super.addHeaderView(v);
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev)
@@ -167,18 +190,71 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
                 int moveX = (int) (ev.getX() + 0.5f);
                 int moveY = (int) (ev.getY() + 0.5f);
 
+
+/*                if(mFirstView!=null){
+                    //获得listView左上角的坐标，
+                    int[] listLocation=new int[2];
+                    this.getLocationOnScreen(listLocation);
+                    Log.d(TAG,"listLocation ::"+listLocation[0]+"......"+listLocation[1]);
+                    //获得轮播图的左上角的坐标
+                    int[] autoPlayLocation=new int[2];
+                    mFirstView.getLocationOnScreen(autoPlayLocation);
+                    Log.d(TAG, "autoPlayLocation ::" + autoPlayLocation[0] + "....." + autoPlayLocation[1]);
+                    Log.d(TAG,"getDividerHeight::"+getDividerHeight());
+                }*/
+
+                boolean canDrag = true;
+                if (mFirstView != null)
+                {
+                    // 获取listview的左上角点的坐标
+                    int[] lvLoc = new int[2];
+                    this.getLocationOnScreen(lvLoc);
+                    Log.d(TAG, "listView : " + lvLoc[0] + "   " + lvLoc[1]);
+
+                    // 获取第一个view的左上角坐标
+                    int[] fvLoc = new int[2];
+                    mFirstView.getLocationOnScreen(fvLoc);
+                    Log.d(TAG, "firstView : " + fvLoc[0] + "   " + (fvLoc[1] - getDividerHeight()));
+
+
+                    // 如果第一个view是全部露出来的时候
+                    // 没有完全露出
+
+                    if (lvLoc[1] > (fvLoc[1]))
+                    {
+                        // 没有露出来
+                        canDrag = false;
+
+                        //不拦截父类的方法
+                        isInterrupt=false;
+                        if (space == -1)
+                        {
+                            space = lvLoc[1] -fvLoc[1];
+                        }
+                    }
+                    else
+                    {
+                        canDrag = true;
+                        // space = 0;
+                        //拦截父类的方法
+                        isInterrupt=true;
+                    }
+                }
+
                 //获得滑动距离
                 int diffx = moveY - mDownY;
-
                 //如果当前刷新头是正在刷新，则不能做下拉的动作
                 if (mCurrentState == PULL_RUNING_REFRESHSTATE)
                 {
                     break;
                 }
-
-                if (diffx > 0 && getFirstVisiblePosition() == 0)
+                if (diffx > 0 && getFirstVisiblePosition() == 0 && canDrag)
                 {
-                    mViewHeader.setPadding(0, diffx - mRefreshHeadHeight, 0, 0);
+                    Log.d(TAG,"能够拉了1");
+                    int paddingTop = (diffx - space) - mRefreshHeadHeight;
+                    mViewHeader.setPadding(0, paddingTop,0, 0);
+
+                    //mViewHeader.setPadding(0, diffx - mRefreshHeadHeight, 0, 0);
                     //判断是否
                     if (diffx - mRefreshHeadHeight < 0 && mCurrentState != PULL_DOWN_REFRESHSTATE)
                     {
@@ -196,12 +272,14 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
                     }
                     //因为默认返回父类的onTouch事件。它会实时去更改孩子布局，
                     // 所以这里返回true,不去返回父类的onTouch
-                    return true;
+                    if(isInterrupt){
+                        return true;
+                    }
                 }
                 //Log.d(TAG," 总的条目:"+getAdapter().getCount()+"..当前显示的第一个条目:"+getFirstVisiblePosition());
                 break;
             case MotionEvent.ACTION_UP:
-
+                space = -1;
                 if (mCurrentState == PULL_DOWN_REFRESHSTATE)
                 {
                     //如果放开时候处于下拉刷新状态，则设置隐藏
@@ -218,7 +296,8 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
                     int end = 0;
                     addHeadAnimation(start, end);
                     //设置回调方法
-                    if(mRefreshListener!=null){
+                    if (mRefreshListener != null)
+                    {
                         mRefreshListener.OnRefreshFinish();
                     }
                 }
@@ -251,6 +330,7 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
         //开始做动画
         valueAnimator.start();
     }
+
 
     //设置更新UI
     private void updateUI()
@@ -310,32 +390,38 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
         }
     }
 
-    public void setActionFinish(boolean isRefresh){
-        if(isRefresh){
+
+    public void setActionFinish(boolean isRefresh)
+    {
+
+        if (isRefresh)
+        {
             //是下拉刷新完后的操作
 
             //改变状态为下拉刷新的状态
-            mCurrentState=PULL_DOWN_REFRESHSTATE;
+            mCurrentState = PULL_DOWN_REFRESHSTATE;
             //更新UI
             updateUI();
             //隐藏header
-            mViewHeader.setPadding(0,-mRefreshHeadHeight,0,0);
+            mViewHeader.setPadding(0, -mRefreshHeadHeight, 0, 0);
             //设置更新时间
             //初始化时间
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String date = format.format(new Date(System.currentTimeMillis()));
             mDate.setText(date);
-        }else{
+        } else
+        {
             //上拉加载完成后的操作
 
             //隐藏加载更多的footer界面
-            mViewFoot.setPadding(0,-mLoadMeasuredHeight,0,0);
+            mViewFoot.setPadding(0, -mLoadMeasuredHeight, 0, 0);
         }
     }
 
 
     /**
      * 设置滑动过程中的监听，用于监听滑动到最后一位时候，并且固定时候，显示加载更多的尾信息
+     *
      * @param view
      * @param scrollState
      */
@@ -343,18 +429,20 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
     public void onScrollStateChanged(AbsListView view, int scrollState)
     {
         //获得当前看到最后一个条目的位置
-        int position=view.getLastVisiblePosition();
+        int position = view.getLastVisiblePosition();
         //当显示最后一个条目，并且是固定时候，显示加载显示
-        if(position==getAdapter().getCount()-1 && scrollState==SCROLL_STATE_IDLE){
+        if (position == getAdapter().getCount() - 1 && scrollState == SCROLL_STATE_IDLE)
+        {
             //显示尾信息
-            mViewFoot.setPadding(0,0,0,0);
+            mViewFoot.setPadding(0, 0, 0, 0);
             //选中尾信息
             this.setSelection(getAdapter().getCount());
-        }
 
-        if(mRefreshListener!=null)
-        {
-            mRefreshListener.OnLoadingFinish();
+
+            if (mRefreshListener != null)
+            {
+                mRefreshListener.OnLoadingFinish();
+            }
         }
     }
 
@@ -369,12 +457,17 @@ public class RefreshListView extends ListView implements AbsListView.OnScrollLis
     //接口回调的接口
     public interface OnRefreshFinishListener
     {
+
         void OnRefreshFinish();
 
         void OnLoadingFinish();
     }
+
+
     //接口回调的方法
-    public void setOnRefreshFinishListener(OnRefreshFinishListener refreshListener){
-        this.mRefreshListener =refreshListener;
+    public void setOnRefreshFinishListener(OnRefreshFinishListener refreshListener)
+    {
+
+        this.mRefreshListener = refreshListener;
     }
 }

@@ -1,6 +1,7 @@
 package com.jxsn.newsclient.controller.news;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,6 +23,7 @@ import com.jxsn.newsclient.bean.NewsCenterBean;
 import com.jxsn.newsclient.bean.NewsDataBean;
 import com.jxsn.newsclient.controller.BaseController;
 import com.jxsn.newsclient.controller.menu.NewsMenuController;
+import com.jxsn.newsclient.ui.DetailUi;
 import com.jxsn.newsclient.utils.ConstantsUtil;
 import com.jxsn.newsclient.utils.PreferenceUtil;
 import com.jxsn.newsclient.utils.ScreenCodeUtil;
@@ -67,7 +70,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     private RefreshListView mListView;
 
     //定义集合，用于存放图片
-    private List<NewsDataBean.DataEntity.TopnewsEntity> mTopnews;
+    private List<NewsDataBean.Topnews> mTopnews;
 
     //定义菜单条目中的新闻条目中的对象
     private NewsCenterBean.Category mCategoryData;
@@ -76,11 +79,13 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
     private AutoPlayHandler mHandler;
 
-    List<NewsDataBean.DataEntity.NewsEntity> mNewsData;
+    List<NewsDataBean.News> mNewsData;
 
     private String mMoreUrl;
 
     private newsDataAdapter dataAdapter;
+
+    public static final String DETAIL_URL="detail_url";
 
 
     public NewsListController(Context context, NewsCenterBean.Category Data)
@@ -131,114 +136,8 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
         }
         //加载网络的方法
         loadingNet(url);
-    }
 
 
-    //
-    //加载网络url的方法
-    private void loadingNet(final String url)
-    {
-
-        //获得httpUtil对象
-        HttpUtils utils = new HttpUtils();
-        //发送数据
-        utils.send(HttpRequest.HttpMethod.GET, url, null, new RequestCallBack<String>()
-        {
-            //访问成功
-            @Override
-            public void onSuccess(ResponseInfo<String> responseInfo)
-            {
-                //获得返回的结果内容
-                String result = responseInfo.result;
-
-                //缓存数据
-                PreferenceUtil.setString(mContext, url, result);
-                //解析json数据
-                analyzeJson(result);
-            }
-
-
-            //访问失败
-            @Override
-            public void onFailure(HttpException e, String s)
-            {
-
-                Log.d(TAG, "访问网络失败");
-                e.printStackTrace();
-            }
-        });
-    }
-
-
-    //解析json数据的方法
-    private void analyzeJson(String json)
-    {
-
-        //获得Gson对象
-        final Gson gson = new Gson();
-        //转换gson为数据，并封装在bean中
-        NewsDataBean newsDataBean = gson.fromJson(json, NewsDataBean.class);
-        //获得图片源数据
-        mTopnews = newsDataBean.getData().getTopnews();
-
-        //获得更多数据项
-        mMoreUrl = newsDataBean.getData().more;
-
-        //因为可能有缓存，需要清空一下
-        mPointContainer.removeAllViews();
-        //设置点的个数
-        for (int i = 0; i < mTopnews.size(); i++)
-        {
-            View v = new View(mContext);
-            v.setBackgroundResource(R.drawable.dot_normal);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(mContext, 15), ScreenCodeUtil.dpToPx(mContext, 15));
-            if (i != 0)
-            {
-                params.leftMargin = ScreenCodeUtil.dpToPx(mContext, 6);
-            } else
-            {
-                v.setBackgroundResource(R.drawable.dot_focus);
-                mPicTitle.setText(mTopnews.get(i).getTitle());
-            }
-            mPointContainer.addView(v, params);
-        }
-        //获得bean中的图片，并设置轮播图
-        mViewPager.setAdapter(new PicViewPager());
-
-        //利用handler的原理设置轮播图
-        mHandler.start();
-        //设置界面监听
-        mViewPager.setOnPageChangeListener(this);
-        //设置按下和抬起的监听，用于按下时，停止轮播，抬起时候开始轮播
-        mViewPager.setOnTouchListener(new View.OnTouchListener()
-        {
-            @Override
-            public boolean onTouch(View v, MotionEvent event)
-            {
-
-                switch (event.getAction())
-                {
-                    case MotionEvent.ACTION_DOWN:
-                        mHandler.stop();
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        mHandler.start();
-                        break;
-                    default:
-                        break;
-                }
-                return false;
-            }
-        });
-        //获得图文数据
-        mNewsData = newsDataBean.getData().getNews();
-
-        //获得数据Adapter对象
-        dataAdapter = new newsDataAdapter();
-        //加载图文对应数据
-        mListView.setAdapter(dataAdapter);
 
         //设置刷新动画完成的监听,并设置数据的刷新
         mListView.setOnRefreshFinishListener(new RefreshListView.OnRefreshFinishListener()
@@ -298,9 +197,12 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
             @Override
             public void OnLoadingFinish()
             {
+
+                Log.d(TAG, "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
                 //判断是否更多数据的url是否为空，如果为空提示
-                if(TextUtils.isEmpty(mMoreUrl)){
-                    Toast.makeText(mContext,"没有更多数据了",Toast.LENGTH_SHORT).show();
+                if (TextUtils.isEmpty(mMoreUrl))
+                {
+                    Toast.makeText(mContext, "没有更多数据了", Toast.LENGTH_SHORT).show();
                     //执行上拉加载的隐藏
                     mListView.setActionFinish(false);
                     return;
@@ -315,7 +217,9 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
                     {
                         //加载更多的url
                         String url = ConstantsUtil.BASE_URL + mMoreUrl;
+/*
                         Log.d(TAG,url);
+*/
                         //获得HttpUtils对象
                         HttpUtils utils = new HttpUtils();
 
@@ -328,16 +232,16 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
                                 //获得响应的字符串
                                 String json = responseInfo.result;
 
-                                Gson gson=new Gson();
+                                Gson gson = new Gson();
                                 //解析json数据
                                 NewsDataBean moreBean = gson.fromJson(json, NewsDataBean.class);
 
-                                Log.d(TAG,moreBean.toString());
+                                Log.d(TAG, moreBean.toString());
                                 //获得加载更多的项
                                 //TODO  问题：不能将对象转换成字符串
-                                //mMoreUrl = moreBean.getData().more;
+                                mMoreUrl = moreBean.data.more;
                                 //获得更多的数据集合
-                                List<NewsDataBean.DataEntity.NewsEntity> moreDates = moreBean.getData().getNews();
+                                List<NewsDataBean.News> moreDates = moreBean.data.news;
                                 //将更多的数据集合添加到当前集合中，并更新adapter
                                 mNewsData.addAll(moreDates);
                                 //更新数据
@@ -345,8 +249,10 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
                                 //加载完成,执行上拉加载的隐藏
                                 mListView.setActionFinish(false);
-                                Toast.makeText(mContext,"加载完成",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "加载完成", Toast.LENGTH_SHORT).show();
                             }
+
+
                             //访问失败时候
                             @Override
                             public void onFailure(HttpException e, String s)
@@ -354,7 +260,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
                                 Log.d(TAG, "加载失败");
 
-                                Toast.makeText(mContext,"加载失败",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "加载失败", Toast.LENGTH_SHORT).show();
                                 //执行上拉加载的隐藏
                                 mListView.setActionFinish(false);
                             }
@@ -363,6 +269,133 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
                 }, 3000);
             }
         });
+
+
+        //设置点击条目的监听:
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                //跳转到新闻详情界面
+                Intent intent = new Intent(mContext, DetailUi.class);
+                //传递数据到详情界面中去
+                String detailUrl = mNewsData.get(position-2).url;
+                Log.d(TAG,position+"///////////////////");
+                intent.putExtra(DETAIL_URL, detailUrl);
+                //跳转界面
+                mContext.startActivity(intent);
+            }
+        });
+    }
+
+
+    //
+    //加载网络url的方法
+    private void loadingNet(final String url)
+    {
+
+        //获得httpUtil对象
+        HttpUtils utils = new HttpUtils();
+        //发送数据
+        utils.send(HttpRequest.HttpMethod.GET, url, null, new RequestCallBack<String>()
+        {
+            //访问成功
+            @Override
+            public void onSuccess(ResponseInfo<String> responseInfo)
+            {
+                //获得返回的结果内容
+                String result = responseInfo.result;
+
+                //缓存数据
+                PreferenceUtil.setString(mContext, url, result);
+                //解析json数据
+                analyzeJson(result);
+            }
+
+
+            //访问失败
+            @Override
+            public void onFailure(HttpException e, String s)
+            {
+
+                Log.d(TAG, "访问网络失败");
+                e.printStackTrace();
+            }
+        });
+    }
+
+
+    //解析json数据的方法
+    private void analyzeJson(String json)
+    {
+
+        //获得Gson对象
+        final Gson gson = new Gson();
+        //转换gson为数据，并封装在bean中
+        NewsDataBean newsDataBean = gson.fromJson(json, NewsDataBean.class);
+        //获得图片源数据
+        mTopnews = newsDataBean.data.topnews;
+
+        //获得更多数据项
+        mMoreUrl = newsDataBean.data.more;
+        Log.d(TAG,mMoreUrl);
+
+        //因为可能有缓存，需要清空一下
+        mPointContainer.removeAllViews();
+        //设置点的个数
+        for (int i = 0; i < mTopnews.size(); i++)
+        {
+            View v = new View(mContext);
+            v.setBackgroundResource(R.drawable.dot_normal);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ScreenCodeUtil.dpToPx(mContext, 15), ScreenCodeUtil.dpToPx(mContext, 15));
+            if (i != 0)
+            {
+                params.leftMargin = ScreenCodeUtil.dpToPx(mContext, 6);
+            } else
+            {
+                v.setBackgroundResource(R.drawable.dot_focus);
+                mPicTitle.setText(mTopnews.get(i).title);
+            }
+            mPointContainer.addView(v, params);
+        }
+        //获得bean中的图片，并设置轮播图
+        mViewPager.setAdapter(new PicViewPager());
+
+        //利用handler的原理设置轮播图
+        mHandler.start();
+        //设置界面监听
+        mViewPager.setOnPageChangeListener(this);
+        //设置按下和抬起的监听，用于按下时，停止轮播，抬起时候开始轮播
+        mViewPager.setOnTouchListener(new View.OnTouchListener()
+        {
+            @Override
+            public boolean onTouch(View v, MotionEvent event)
+            {
+
+                switch (event.getAction())
+                {
+                    case MotionEvent.ACTION_DOWN:
+                        mHandler.stop();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        mHandler.start();
+                        break;
+                    default:
+                        break;
+                }
+                return false;
+            }
+        });
+        //获得图文数据
+        mNewsData = newsDataBean.data.news;
+
+        //获得数据Adapter对象
+        dataAdapter = new newsDataAdapter();
+        //加载图文对应数据
+        mListView.setAdapter(dataAdapter);
     }
 
 
@@ -424,17 +457,17 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
                 holder = (ViewHolder) convertView.getTag();
             }
             //找到相应数据对象
-            NewsDataBean.DataEntity.NewsEntity entity = mNewsData.get(position);
+            NewsDataBean.News entity = mNewsData.get(position);
 
             //设置默认的图，如果没有网络图，就也会有显示
             holder.ivIcon.setImageResource(R.drawable.pic_item_list_default);
             //获得网络图片，并设置
-            mBitmapUtils.display(holder.ivIcon, entity.getListimage());
+            mBitmapUtils.display(holder.ivIcon, entity.listimage);
 
             //设置标题
-            holder.tvTitle.setText(entity.getTitle());
+            holder.tvTitle.setText(entity.title);
             //设置日期
-            holder.tvDate.setText(entity.getPubdate());
+            holder.tvDate.setText(entity.pubdate);
             return convertView;
         }
     }
@@ -507,7 +540,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
     public void onPageSelected(int position)
     {
         //获得相应图片的title
-        String title = mTopnews.get(position).getTitle();
+        String title = mTopnews.get(position).title;
         //设置title
         mPicTitle.setText(title);
 
@@ -566,7 +599,7 @@ public class NewsListController extends BaseController implements ViewPager.OnPa
 
             ImageView iv = new ImageView(mContext);
             //获得当前条目的图片资源
-            String imageUrl = mTopnews.get(position).getTopimage();
+            String imageUrl = mTopnews.get(position).topimage;
 
             iv.setScaleType(ImageView.ScaleType.FIT_XY);
             mBitmapUtils.display(iv, imageUrl);

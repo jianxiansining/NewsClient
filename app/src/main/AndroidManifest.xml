@@ -25,6 +25,8 @@
             ></activity>
         <!--注册向导界面-->
         <activity android:name=".ui.GuideUi"></activity>
+        <!--新闻详情界面-->
+        <activity android:name=".ui.DetailUi"></activity>
     </application>
 
 </manifest>
